@@ -1,0 +1,9 @@
+my:
+  name: mazhao
+  age: 20
+  number:  ${random.int}
+  uuid: ${random.uuid}
+
+spring:
+  profiles:
+    active: test
