@@ -2,6 +2,7 @@ package com.springboot.springboot.config;
 
 import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.annotation.SpringAnnotationScanner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,5 +30,10 @@ public class NettySocketConfig {
         config.setPingTimeout(pingTimeout);
         config.setPingInterval(pingInterval);
         return new SocketIOServer(config);
+    }
+
+    @Bean
+    public SpringAnnotationScanner springAnnotationScanner(SocketIOServer socketServer) {
+        return new SpringAnnotationScanner(socketServer);
     }
 }
