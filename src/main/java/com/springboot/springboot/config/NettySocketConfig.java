@@ -18,6 +18,10 @@ public class NettySocketConfig {
     @Value("${wss.server.pingInterval}")
     private int pingInterval;
 
+    /**
+     * netty-socketio服务器
+     * @return
+     */
     @Bean
     public SocketIOServer socketIOServer() {
         SocketConfig socketConfig = new SocketConfig();
@@ -32,6 +36,11 @@ public class NettySocketConfig {
         return new SocketIOServer(config);
     }
 
+    /**
+     * 用于扫描netty-socketio的注解，比如 @OnConnect、@OnEvent
+     * @param socketServer
+     * @return
+     */
     @Bean
     public SpringAnnotationScanner springAnnotationScanner(SocketIOServer socketServer) {
         return new SpringAnnotationScanner(socketServer);
