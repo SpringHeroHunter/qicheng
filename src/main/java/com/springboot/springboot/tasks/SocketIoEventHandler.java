@@ -1,16 +1,13 @@
 package com.springboot.springboot.tasks;
 
-import com.corundumstudio.socketio.AckRequest;
-import com.corundumstudio.socketio.SocketIOClient;
-import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.*;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
-import com.springboot.springboot.entity.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -20,7 +17,7 @@ public class SocketIoEventHandler {
      * 会话集合
      */
 //    private static final ConcurrentSkipListMap<String, ClientInfo> webSocketMap = new ConcurrentSkipListMap<>();
-    private static final ConcurrentSkipListMap<String, SocketIOClient> webSocketMap = new ConcurrentSkipListMap<>();
+//    private static final ConcurrentSkipListMap<String, SocketIOClient> webSocketMap = new ConcurrentSkipListMap<>();
 
     /**
      * 记录静态连接数（原子类线程安全）
@@ -31,6 +28,7 @@ public class SocketIoEventHandler {
 
     private SocketIOServer server;
 
+    private SocketIOClient client;
 
     /**
      * connect 客户端发起调用
@@ -38,9 +36,20 @@ public class SocketIoEventHandler {
 
     @OnConnect
     public void onConnect(SocketIOClient client) {
+        this.client = client;
         String clientId = client.getHandshakeData().getSingleUrlParam("clientid");
-        webSocketMap.put(clientId,client);
-        log.info("客户端："+client.getSessionId() +"已连接: "+clientId);
+        //join room
+        client.joinRoom("room007");
+        log.info("客户端："+client.getSessionId() +" 已连接: "+clientId);
+        aa(client);
+    }
+
+    public void aa(SocketIOClient client) {
+        BroadcastOperations name = client.getNamespace().getRoomOperations("room007");
+        Collection<SocketIOClient> clients = name.getClients();
+        for (SocketIOClient s: clients) {
+            log.info(s.getHandshakeData().getSingleUrlParam("clientid"));
+        }
     }
 
 
@@ -49,14 +58,15 @@ public class SocketIoEventHandler {
      */
     @OnDisconnect
     public void onDisconnect(SocketIOClient client) {
+        client.leaveRoom("room007");
         log.info("客户端:" + client.getSessionId() + "断开连接");
     }
 
 
-    @OnEvent(value = "messageevent")
-    public void onEvent(SocketIOClient client, AckRequest request, Message data){
+    @OnEvent(value = "message")
+    public void onEvent(SocketIOClient client, AckRequest request, String data){
         log.info("发来消息：" + data);
         //回发消息
-        client.sendEvent("messageevent", "我是服务器都安发送的信息");
+//        client.sendEvent("messageevent", "我是服务器都安发送的信息");
     }
 }
