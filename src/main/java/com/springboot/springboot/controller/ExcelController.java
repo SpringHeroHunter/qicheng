@@ -1,22 +1,23 @@
 package com.springboot.springboot.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.EasyExcelFactory;
 import com.alibaba.excel.read.builder.ExcelReaderBuilder;
 import com.alibaba.excel.write.builder.ExcelWriterBuilder;
 import com.alibaba.excel.write.builder.ExcelWriterSheetBuilder;
+import com.springboot.springboot.dto.DemoDto;
+import com.springboot.springboot.dto.ExcelCheckErrDto;
 import com.springboot.springboot.entity.DemoData;
 import com.springboot.springboot.entity.FileData;
 import com.springboot.springboot.excelListener.DemoReadListener;
+import com.springboot.springboot.excelListener.EasyExcelListener;
 import com.springboot.springboot.excelListener.WebDataListener;
+import com.springboot.springboot.service.IDemoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -31,7 +32,10 @@ import java.util.List;
 public class ExcelController {
 
     @Autowired
-    WebDataListener webDataListener;
+    private WebDataListener webDataListener;
+    @Autowired
+    private IDemoService demoService;
+
 
     /**
      * 读取excel
@@ -77,6 +81,16 @@ public class ExcelController {
     }
 
 
+    @PostMapping("importExcel")
+    public String importExcel(MultipartFile file) throws IOException {
+        EasyExcelListener easyExcelListener = new EasyExcelListener(demoService, DemoDto.class);
+        EasyExcelFactory.read(file.getInputStream(),DemoDto.class,easyExcelListener).sheet().doRead();
+        List<ExcelCheckErrDto<DemoDto>> errList = easyExcelListener.getErrList();
+        return errList.toString();
+    }
+
+
+
 
     /**
      * excel模板下载
@@ -98,6 +112,7 @@ public class ExcelController {
         // 写入数据到工作表中
         sheet.doWrite(data());
     }
+
 
 
     /**
@@ -131,7 +146,7 @@ public class ExcelController {
     @PostMapping("numtemplate")
     public void numtemplate(){
         // 加载模板
-        InputStream templateFile = this.getClass().getClassLoader().getResourceAsStream("templates/fill_data_template1.xlsx");
+        InputStream templateFile = this.getClass().getClassLoader().getResourceAsStream("templates/fill_data_template2.xlsx");
         // 写入文件
         String targetFileName = "多组数据填充.xlsx";
         // 生成工作簿对象
@@ -139,6 +154,11 @@ public class ExcelController {
         // 获取第一个工作表填充并自动关闭流
         workBookWriter.sheet().doFill(TemplateData());
     }
+
+    public static void main(String[] args) {
+        InputStream templateFile = Thread.currentThread().getContextClassLoader().getResourceAsStream("templates/fill_data_template3.xlsx");
+    }
+
 
 
 
@@ -151,7 +171,7 @@ public class ExcelController {
         ArrayList<FileData> fillDatas = new ArrayList<FileData>();
         for (int i = 0; i < 10; i++) {
             FileData fillData = new FileData();
-            fillData.setName("杭州黑马0" + i);
+            fillData.setName("aa" + i);
             fillData.setAge(10 + i);
             fillDatas.add(fillData);
         }
